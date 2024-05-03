@@ -1,0 +1,143 @@
+use std::collections::HashMap;
+
+const PROGRAM_ADDRESS: u32 = 0;
+
+#[derive(Debug)]
+pub struct Memory {
+    pool: Vec<u32>,
+    heap: HashMap<u32, Vec<Option<u32>>>,
+}
+
+impl Memory {
+    pub fn new(instructions: Vec<u32>) -> Memory {
+        let mut heap = HashMap::new();
+        heap.insert(PROGRAM_ADDRESS, instructions.into_iter().map(Some).collect());
+
+        Memory {
+            pool: Vec::new(),
+            heap,
+        }
+    }
+
+    pub fn allocate(&mut self, size: usize) -> u32 {
+        let address = self.pool.pop().unwrap_or_else(|| self.heap.len() as u32);
+        self.heap.entry(address).or_insert_with(|| vec![None; size]);
+        address
+    }
+
+    pub fn deallocate(&mut self, address: u32) {
+        if let Some(memory) = self.heap.remove(&address) {
+            self.pool.push(address);
+        } else {
+            panic!("Invalid address {}, cannot deallocate", address);
+        }
+    }
+
+    pub fn load(&self, seg_id: u32, address: u32) -> u32 {
+        self.heap
+            .get(&seg_id)
+            .and_then(|segment| segment.get(address as usize).cloned().flatten())
+            .unwrap_or_else(|| panic!("Error: Invalid memory access"))
+    }
+
+    pub fn get_instruction(&self, pc: u32) -> u32 {
+        self.heap
+            .get(&PROGRAM_ADDRESS)
+            .and_then(|program| program.get(pc as usize).cloned().flatten())
+            .unwrap_or_else(|| panic!("Error: Invalid program counter"))
+    }
+
+    pub fn store(&mut self, seg_id: u32, address: u32, value: u32) {
+        if let Some(memory) = self.heap.get_mut(&seg_id) {
+            if let Some(cell) = memory.get_mut(address as usize) {
+                *cell = Some(value);
+                return;
+            }
+        }
+        panic!("Error: Invalid memory access");
+    }
+
+    pub fn load_segment(&mut self, seg_id: u32) {
+        if let Some(program) = self.heap.get(&seg_id) {
+            if let Some(dest) = self.heap.get_mut(&PROGRAM_ADDRESS) {
+                dest.clear();use std::collections::HashMap;
+
+                const PROGRAM_ADDRESS: u32 = 0;
+                
+                #[derive(Debug)]
+                pub struct Memory {
+                    pool: Vec<u32>,
+                    heap: HashMap<u32, Vec<Option<u32>>>,
+                }
+                
+                impl Memory {
+                    pub fn new(instructions: Vec<u32>) -> Memory {
+                        let mut heap = HashMap::new();
+                        heap.insert(PROGRAM_ADDRESS, instructions.into_iter().map(Some).collect());
+                
+                        Memory {
+                            pool: Vec::new(),
+                            heap,
+                        }
+                    }
+                
+                    pub fn allocate(&mut self, size: usize) -> u32 {
+                        let address = self.pool.pop().unwrap_or_else(|| self.heap.len() as u32);
+                        self.heap.entry(address).or_insert_with(|| vec![None; size]);
+                        address
+                    }
+                
+                    pub fn deallocate(&mut self, address: u32) {
+                        if let Some(memory) = self.heap.remove(&address) {
+                            self.pool.push(address);
+                        } else {
+                            panic!("Invalid address {}, cannot deallocate", address);
+                        }
+                    }
+                
+                    pub fn load(&self, seg_id: u32, address: u32) -> u32 {
+                        self.heap
+                            .get(&seg_id)
+                            .and_then(|segment| segment.get(address as usize).cloned().flatten())
+                            .unwrap_or_else(|| panic!("Error: Invalid memory access"))
+                    }
+                
+                    pub fn get_instruction(&self, pc: u32) -> u32 {
+                        self.heap
+                            .get(&PROGRAM_ADDRESS)
+                            .and_then(|program| program.get(pc as usize).cloned().flatten())
+                            .unwrap_or_else(|| panic!("Error: Invalid program counter"))
+                    }
+                
+                    pub fn store(&mut self, seg_id: u32, address: u32, value: u32) {
+                        if let Some(memory) = self.heap.get_mut(&seg_id) {
+                            if let Some(cell) = memory.get_mut(address as usize) {
+                                *cell = Some(value);
+                                return;
+                            }
+                        }
+                        panic!("Error: Invalid memory access");
+                    }
+                
+                    pub fn load_segment(&mut self, seg_id: u32) {
+                        if let Some(program) = self.heap.get(&seg_id) {
+                            if let Some(dest) = self.heap.get_mut(&PROGRAM_ADDRESS) {
+                                dest.clear();
+                                dest.extend(program.iter().flatten().cloned());
+                            } else {
+                                panic!("Error: Unable to access program memory");
+                            }
+                        } else {
+                            panic!("Error: No program found at address {}", seg_id);
+                        }
+                    }
+                }
+                dest.extend(program.iter().flatten().cloned());
+            } else {
+                panic!("Error: Unable to access program memory");
+            }
+        } else {
+            panic!("Error: No program found at address {}", seg_id);
+        }
+    }
+}
